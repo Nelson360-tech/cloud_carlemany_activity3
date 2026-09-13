@@ -14,6 +14,47 @@ services:
     networks:
       - carlemany-net
 
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: carlemany
+      POSTGRES_PASSWORD: carlemany
+      POSTGRES_DB: carlemany
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - carlemany-net
+
+  make_migrations:
+    build:
+      context: .
+      target: carlemany-backend-base
+    volumes:
+      - type: bind
+        source: ./
+        target: /carlemany-backend
+    networks:
+      - carlemany-net
+    depends_on:
+      - postgres
+    entrypoint: aerich migrate
+
+  migrate:
+    build:
+      context: .
+      target: carlemany-backend-base
+    volumes:
+      - type: bind
+        source: ./
+        target: /carlemany-backend
+    networks:
+      - carlemany-net
+    depends_on:
+      - postgres
+    entrypoint: aerich upgrade
+
   black:
     image: carlemany-backend-base:latest
     volumes:
@@ -42,3 +83,6 @@ services:
 
 networks:
   carlemany-net:
+
+volumes:
+  postgres_data:
